@@ -1,0 +1,58 @@
+.container {
+    margin: auto;
+    width: 80%;
+    max-width: 1200px
+}
+
+.side-navigation {
+    background: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 15px 0 30px 30px;
+    border-right: 1px solid #bbb;
+    box-shadow: 0 0 20px #ccc;
+    -webkit-box-shadow: 0 0 20px #ccc;
+    -moz-box-shadow: 0 0 20px #ccc;
+}
+
+.network text.node-name {
+  text-anchor: middle;
+}
+.node text.node-name {
+  text-anchor: middle;
+}
+.node, .switch, .port, .host {
+    stroke-width: 1.5px;
+}
+
+.node rect {
+    stroke: #222;
+    stroke-width: 1.5px;
+    fill: #999;
+}
+
+.network circle {
+    fill: #1f77b4;
+    fill-opacity: .1;
+    stroke: steelblue;
+}
+
+.port circle {
+    fill: purple;
+    stroke: steelblue;
+}
+
+.link {
+    stroke: #999;
+    stroke-opacity: .6;
+}
+
+body {
+  font-family: "Roboto Condensed", "Helvetica Neue",Helvetica,Tahoma,sans-serif;
+}
+

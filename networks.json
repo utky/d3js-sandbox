@@ -1,0 +1,86 @@
+{
+	"root": {
+		"id": 0
+		, "name": "Root"
+		, "nodes": []
+		, "children": [
+			{
+				"id": 1
+				, "name": "Area A"
+				, "nodes": [
+					{
+						"id": 1
+						, "name": "Switch1"
+						, "address": "192.168.1.10"
+						, "ports": [
+							{
+								"id": 1
+								, "name": "ge-0/1"
+							}
+							, {
+								"id": 2
+								, "name": "ge-0/2"
+							}
+						]
+					}
+					, {
+						"id": 2
+						, "name": "Switch2"
+						, "address": "192.168.1.20"
+						, "ports": [
+							{
+								"id": 3
+								, "name": "ge-0/1"
+							}
+							, {
+								"id": 4
+								, "name": "ge-0/2"
+							}
+						]
+					}
+				]
+				, "children": []
+			}
+			, {
+				"id": 2
+				, "name": "Area B"
+				, "nodes": [
+					{
+						"id": 3
+						, "name": "Switch3"
+						, "address": "192.168.1.30"
+						, "ports": [
+							{
+								"id": 5
+								, "name": "ge-0/1"
+							}
+							, {
+								"id": 6
+								, "name": "ge-0/2"
+							}
+						]
+					}
+				]
+				, "children": [
+					{
+						"id": 3
+						, "name": "Area C"
+						, "nodes": []
+						, "children": []
+					}
+					, {
+						"id": 4
+						, "name": "Area D"
+						, "nodes": []
+						, "children": []
+					}	
+				]
+			}
+		]
+	}
+	, "links": [
+		{ "source": 0, "target": 1}
+		, { "source": 1, "target": 2}
+		, { "source": 0, "target": 2}
+	]
+}

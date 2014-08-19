@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+ 
+.link {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+ 
+.node {
+  cursor: move;
+  fill: #ccc;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+ 
+.node.fixed {
+  fill: #f00;
+}
+ 
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+function Topology(baseSelection, options) {
+	this.baseSelection = baseSelection;
+	this.force = d3.layout.force()
+    	.size([this.baseSelection.attr("width"), this.baseSelection.attr("height")])
+    	.charge(-400)
+    	.linkDistance(40)
+    	.on("tick", this.tick(this));
+
+	this.drag = this.force.drag()
+    	.on("dragstart", this.dragstart);
+	this.groups = [];
+ 
+}
+
+Topology.prototype = {
+	constructor: Topology
+	, node: function() { return this.baseSelection.selectAll(".node"); }
+	, link: function() { return this.baseSelection.selectAll(".link"); }
+	, data: function(nodes, links) {
+		this.force
+			.nodes(nodes)
+			.links(links)
+			.start();
+
+		this.link().data(links)
+    		.enter().append("line")
+      			.attr("class", "link");
+ 
+		this.node().data(nodes, function(d) { return d.id })
+    		.enter().append("circle")
+      			.attr("class", "node")
+      			.attr("r", 12)
+	  			.classed("fixed", function(d) {return d.fixed = true})
+      			.on("dblclick", this.dblclick)
+      			.call(this.drag);
+
+		this.groups = d3.nest().key(function(d) { return d.parent.id; }).entries(nodes);
+		console.log(this.groups);
+
+		return this;
+	}
+	, tick: function(thisArg) {
+		return function() {
+			thisArg.link().attr("x1", function(d) { return d.source.x; })
+				.attr("y1", function(d) { return d.source.y; })
+				.attr("x2", function(d) { return d.target.x; })
+				.attr("y2", function(d) { return d.target.y; });
+ 
+			thisArg.node().attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
+			
+			thisArg.baseSelection.selectAll("path")
+			    .data(thisArg.groups)
+			      .attr("d", thisArg.groupPath)
+			    .enter().insert("path", "circle")
+					.style("fill", function(d) { return "cyan" })
+					.style("stroke", function(d) { return "cyan" })
+			      .style("stroke-width", 40)
+			      .style("stroke-linejoin", "round")
+			      .style("opacity", .2)
+			      .attr("d", thisArg.groupPath);
+
+		};
+	}
+	, dblclick: function (d) {
+		  d3.select(this).classed("fixed", d.fixed = false);
+		}
+	, dragstart: function (d) {
+  		d3.select(this).classed("fixed", d.fixed = true);
+	}
+	, groupPath: function(d) {
+		var vertices = d.values.map(function(i) { return [i.x, i.y]; });
+		var toBeJoined = vertices.langth > 2 ? d3.geom.hull(vertices) : vertices;
+	    return "M" + toBeJoined.join("L") + "Z";
+	}
+};
+
+var topology = function(selection) {
+	return new Topology(selection);
+};
+ 
+var width = 960,
+    height = 500;
+ 
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+ 
+d3.json("networks.json", function(error, data) {
+
+	var collectNode = function(network) {
+		var nodes = network.nodes || [];
+		nodes.map(function(n) { n.parent = network; });
+		var subNodes = network.children.map(collectNode);
+		return subNodes.reduce(function(a, ns) { return a.concat(ns); }, nodes.concat());
+	};
+
+	var nodes = collectNode(data.root);
+
+	//var topology = new Topology(svg);
+	var t = topology(svg);
+	t.data(nodes, data.links);
+	console.log(t.link().data());
+});
+
+
+ 
+</script>
