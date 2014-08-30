@@ -14,12 +14,16 @@
 						, "address": "192.168.1.10"
 						, "ports": [
 							{
-								"id": 1
+								"id": 11
 								, "name": "ge-0/1"
 							}
 							, {
-								"id": 2
+								"id": 12
 								, "name": "ge-0/2"
+							}
+							, {
+								"id": 13
+								, "name": "ge-0/3"
 							}
 						]
 					}
@@ -29,11 +33,11 @@
 						, "address": "192.168.1.20"
 						, "ports": [
 							{
-								"id": 3
+								"id": 21
 								, "name": "ge-0/1"
 							}
 							, {
-								"id": 4
+								"id": 22
 								, "name": "ge-0/2"
 							}
 						]
@@ -51,11 +55,11 @@
 						, "address": "192.168.1.30"
 						, "ports": [
 							{
-								"id": 5
+								"id": 31
 								, "name": "ge-0/1"
 							}
 							, {
-								"id": 6
+								"id": 32
 								, "name": "ge-0/2"
 							}
 						]
@@ -66,8 +70,12 @@
 						, "address": "192.168.1.30"
 						, "ports": [
 							{
-								"id": 7
+								"id": 41
 								, "name": "ge-0/1"
+							}
+							, {
+								"id": 42
+								, "name": "ge-0/2"
 							}
 						]
 					}
@@ -77,8 +85,12 @@
 						, "address": "192.168.1.30"
 						, "ports": [
 							{
-								"id": 8
+								"id": 51
 								, "name": "ge-0/1"
+							}
+							, {
+								"id": 52
+								, "name": "ge-0/2"
 							}
 						]
 					}
@@ -101,10 +113,10 @@
 		]
 	}
 	, "links": [
-		{ "source": 0, "target": 1}
-		, { "source": 1, "target": 2}
-		, { "source": 0, "target": 2}
-		, { "source": 2, "target": 3}
-		, { "source": 3, "target": 4}
+		{ "source": 11, "target": 21}
+		, { "source": 22, "target": 32}
+		, { "source": 12, "target": 31}
+		, { "source": 13, "target": 41}
+		, { "source": 42, "target": 52}
 	]
 }

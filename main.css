@@ -5,19 +5,19 @@
 }
 
 .port {
-  fill: #cecece;
+  fill: #a7ceee;
 }
 
 .link line {
-  stroke: #8d8d8d;
-  stroke-width: 3;
+  stroke: #adadad;
+  stroke-width: 1.5;
 }
 
 .group path {
   fill: #ccf;
   fill-opacity: 0.4;
   stroke: #ccf;
-  stroke-width: 100;
+  stroke-width: 70;
   stroke-opacity: 0.4;
   stroke-linecap: "round";
   stroke-linejoin: "round";
