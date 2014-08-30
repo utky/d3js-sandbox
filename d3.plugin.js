@@ -1,13 +1,13 @@
 /**
- * QuickCheck
- * うーん、dataで一括受信すると
- * networkとnode、portの関係を解析する必要がある
- *
- * 逆にそれをnetworkやnodeなどのメソッドで受け取ると
- * 階層関係の定義が別途必要になる
  */
 (function(window, d3){
 
+	/** ==============================================================
+	 * Default functions
+	 * # this could be overriden by user
+	 */
+
+	/* rendering DOM -------------------------------------------------*/
 	var renderGroup = function(g) {
 		g.classed("group", true)
 			.append("text")
@@ -37,6 +37,7 @@
 		g.append("line");
 	}
 
+	/* Tick action and modify DOM -------------------------------------------------*/
 	var tickGroup = function(selection) {
 		var collectNode = function(acc, g) {
 			var ns = acc.concat(g.nodes);
@@ -72,8 +73,12 @@
 	};
 
 
-	function create() {
+	/**
+	 * Entry point of this plugin
+	 */
+	function create(options) {
 
+		// Default configuration object
 		var cfg = {
 			width: function() { return 900 }
 			, height: function() { return 800 }
@@ -107,22 +112,27 @@
 			}
 		};
 
-		// entry point of selection processing
+		// selection processing
 		function topology(selection) {
 			selection.each(function(d, i) {
 				var force = cfg.force();
 
-				var foldGroup = function(acc, g) {
+				// flatten hierarchical group object to plain array.
+				// by recursive reducing
+				var flattenGroup = function(acc, g) {
 					var gs = cfg.group.children(g);
 					acc.push(g);
-					return gs.reduce(foldGroup, acc);
+					return gs.reduce(flattenGroup, acc);
 				};
+				var groupsArray = flattenGroup(new Array(), d.network);
 
-				var groupsArray = foldGroup(new Array(), d.network);
+				// collect node objects which underlies on a group object
 				var nodesArray = groupsArray.reduce(function(a, g) {
 					return a.concat((cfg.group.nodes(g) || []));
 				}, new Array());
 				var nl = nodesArray.length;
+
+				// modify some fields for later rendering
 				nodesArray = nodesArray.map(function(n, i) {
 					// initial coordinates
 					n.x = n.y = cfg.width() / nl * i;
@@ -132,6 +142,9 @@
 
 				var target = d3.select(this);
 
+				/*
+				 * Start transformation data to DOM
+				 */
 				var groups = target.selectAll(cfg.group.selector())
 					.data(groupsArray, cfg.group.key);
 				groups.enter().append("g")
@@ -152,6 +165,9 @@
 					.enter().append("g")
 					.call(cfg.link.render);
 
+				/*
+				 * Setup force layout configuration
+				 */
 				target.selectAll(cfg.node.selector()).call(force.drag);
 				force
 					.gravity(0)
@@ -176,166 +192,10 @@
 			});
 		}
 
-		/*
-		topology.nodes = function(value) {
-			if (!arguments.length) return nodes;
-			nodes = value;
-			return topology;
-		}
-
-		topology.links = function(value) {
-			if (!arguments.length) return links;
-			links = value;
-			return topology;
-		}
-		*/
-
-		topology.select = function(type, callback) {
-			return function(selection) {
-				if (callback) selection.selectAll(type).call(callback);
-			};
-		}
-
 		return topology
 	}
 
 	d3.topology = create
-
- /*
-
-	function Topology(baseSelection, options) {
-		this.baseSelection = baseSelection;
-		this.force = d3.layout.force()
-	    	.size([this.baseSelection.attr("width"), this.baseSelection.attr("height")])
-	    	.charge(-400)
-	    	.linkDistance(40)
-	    	.on("tick", this.tick(this));
-	
-		this.drag = this.force.drag()
-	    	.on("dragstart", this.dragstart);
-		this.groups = [];
-	 
-	}
-	
-	Topology.prototype = {
-		constructor: Topology
-		, node: function() { return this.baseSelection.selectAll(".node"); }
-		, link: function() { return this.baseSelection.selectAll(".link"); }
-		, data: function(nodes, links) {
-			this.force
-				.nodes(nodes)
-				.links(links)
-				.start();
-	
-			this.link().data(links)
-	    		.enter().append("line")
-	      			.attr("class", "link");
-	 
-			this.node().data(nodes, function(d) { return d.id })
-	    		.enter().append("circle")
-	      			.attr("class", "node")
-	      			.attr("r", 12)
-		  			.classed("fixed", function(d) {return d.fixed = true})
-	      			.on("dblclick", this.dblclick)
-	      			.call(this.drag);
-	
-			this.groups = d3.nest().key(function(d) { return d.parent.id; }).entries(nodes);
-			console.log(this.groups);
-	
-			return this;
-		}
-		, tick: function(thisArg) {
-			return function() {
-				thisArg.link().attr("x1", function(d) { return d.source.x; })
-					.attr("y1", function(d) { return d.source.y; })
-					.attr("x2", function(d) { return d.target.x; })
-					.attr("y2", function(d) { return d.target.y; });
-	 
-				thisArg.node().attr("cx", function(d) { return d.x; })
-					.attr("cy", function(d) { return d.y; });
-				
-				thisArg.baseSelection.selectAll("path")
-				    .data(thisArg.groups)
-				      .attr("d", thisArg.groupPath)
-				    .enter().insert("path", "circle")
-						.style("fill", function(d) { return "cyan" })
-						.style("stroke", function(d) { return "cyan" })
-				      .style("stroke-width", 40)
-				      .style("stroke-linejoin", "round")
-				      .style("opacity", .2)
-				      .attr("d", thisArg.groupPath);
-	
-			};
-		}
-		, dblclick: function (d) {
-			  d3.select(this).classed("fixed", d.fixed = false);
-			}
-		, dragstart: function (d) {
-	  		d3.select(this).classed("fixed", d.fixed = true);
-		}
-		, groupPath: function(d) {
-			var vertices = d.values.map(function(i) { return [i.x, i.y]; });
-			var toBeJoined = vertices.langth > 2 ? d3.geom.hull(vertices) : vertices;
-		    return "M" + toBeJoined.join("L") + "Z";
-		}
-	};
-	
-	var topology = function(selection) {
-		return new Topology(selection);
-	};
-	 
-	var width = 960,
-	    height = 500;
-	 
-	var svg = d3.select("body").append("svg")
-	    .attr("width", width)
-	    .attr("height", height);
-	 
-	d3.json("networks.json", function(error, data) {
-	
-		var collectNode = function(network) {
-			var nodes = network.nodes || [];
-			nodes.map(function(n) { n.parent = network; });
-			var subNodes = network.children.map(collectNode);
-			return subNodes.reduce(function(a, ns) { return a.concat(ns); }, nodes.concat());
-		};
-	
-		var nodes = collectNode(data.root);
-	
-		//var topology = new Topology(svg);
-		var t = topology(svg);
-		t.data(nodes, data.links);
-		console.log(t.link().data());
-	});
-
-
- 
-	window.d3test = {
-		testDataFeed: function() {
-
-			var topology = d3.topology().select("#graph-content");
-
-			$.getJSON("./data/networks.json").success(function (data) {
-
-				topology.data(data["root"], []);
-				// topology.data(data["root"], data["links"]);
-
-			}).error(function(e) {
-				console.error(e);
-			});
-		}
-		, testRender: function() {
-		}
-	};
-
-	// execute test suite
-	$(function() {
-		for(var key in window.d3test) {
-			var test = window.d3test[key];
-			test.call(window);
-		}
-	});
-	*/
 
 })(window, d3);
 
