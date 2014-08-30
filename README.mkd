@@ -8,3 +8,47 @@ This plugin ....
 
 * consumes data which reveal nodes and links in network.
 * renders a network topology diagram.
+
+## Basic Data Structure
+
+```
+{
+    "network": {
+        "id": 1
+        , "name": "foo group"
+        , "nodes": []
+        , "children": [
+            {
+                "id": 2
+                , "name": "bar group"
+                , "nodes": [
+                    {
+                        "id": 1
+                        , "name": "1st node"
+                        , "ports": [
+                            {
+                                "id": 1
+                                , "name": "port one"
+                            }
+                            , {
+                                "id": 2
+                                , "name": "port two"
+                            }
+                        ]
+                    }
+                ]
+                , "children": []
+        ]
+    }
+    , "links": [
+        {
+            "source": 1
+            , "target": 2
+        }
+    ]
+}
+```
+
+## Screenshot
+
+![screen shot](screenshot.png)
