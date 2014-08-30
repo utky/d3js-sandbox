@@ -1,5 +1,5 @@
 {
-	"root": {
+	"network": {
 		"id": 0
 		, "name": "Root"
 		, "nodes": []
@@ -60,6 +60,28 @@
 							}
 						]
 					}
+					, {
+						"id": 4
+						, "name": "Switch4"
+						, "address": "192.168.1.30"
+						, "ports": [
+							{
+								"id": 7
+								, "name": "ge-0/1"
+							}
+						]
+					}
+					, {
+						"id": 5
+						, "name": "Switch5"
+						, "address": "192.168.1.30"
+						, "ports": [
+							{
+								"id": 8
+								, "name": "ge-0/1"
+							}
+						]
+					}
 				]
 				, "children": [
 					{
@@ -82,5 +104,7 @@
 		{ "source": 0, "target": 1}
 		, { "source": 1, "target": 2}
 		, { "source": 0, "target": 2}
+		, { "source": 2, "target": 3}
+		, { "source": 3, "target": 4}
 	]
 }

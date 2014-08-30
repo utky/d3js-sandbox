@@ -1,23 +1,10 @@
 # Writing plugin in D3.js
 
-D3.jsの抽象化についての整理
+This repository contains a trial codes to write D3.js plugin.
 
-D3に登場する基本的な概念は以下の二つだけです。
+## Goal of this plugin
 
-1. DOM (大抵の場合SVG）
-2. データ
+This plugin ....
 
-この二つの間を取り持つのがD3です。
-
-正確には
-データ -> DOM
-というシグネチャで表現されるただの変換子であり関数です。
-
-
-考えるべきぽいんと
-
-1. データ -> DOMの変換規則を入力とする高階関数のコール
-2. 宛先のDOMへのバインド
-3. Dataのフィード
-4. レンダリング
-
+* consumes data which reveal nodes and links in network.
+* renders a network topology diagram.
