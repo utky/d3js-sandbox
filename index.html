@@ -101,6 +101,7 @@ $(function(){
 					models.node.close();
 				});
 				nodes.on("click", function(d) {
+ 					if (d3.event.defaultPrevented) return;
 					models.node.open(d);
 				});
 			}));
