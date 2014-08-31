@@ -1,20 +1,109 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <link rel="stylesheet" type="text/css" media="screen" href="main.css">
+<link rel="stylesheet" type="text/css" media="screen" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
 <body>
 	<div>
 		<svg id="stage" width="1000" height="800">
 		</svg>
 	</div>
+
+	<div id="node-detail-diag" class="modal fade" role="modal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>ID:
+					<span data-bind="text: node.id"></span>
+					</h3>
+				</div>
+				<div class="modal-body">
+					<form id="node-form" role="form">
+						<fieldset>
+							<div class="form-group">
+								<label>Name
+									<input type="text" name="name" id="name" class="form-control"
+										data-bind="value: node.name">
+								</label>
+							</div>
+							<div class="form-group">
+								<label for="email">IP v4 Address
+									<input type="text" name="ip-address" id="ip-address" class="form-control"
+										data-bind="value: node.ipAddress">
+								</label>
+							</div>
+							<div class="form-group">
+								<button id="close" type="button" class="btn btn-primary">OK</button>
+							</div>
+
+					    </fieldset>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
 <script src="d3.plugin.js"></script>
 <script>
-window.addEventListener("load", function(){
-	var topology = d3.topology();
+
+$(function(){
+	var Node = (function(){
+		function Node(target) {
+			this.$t = target;
+			this.id = ko.observable("");
+			this.name = ko.observable("");
+			this.ipAddress = ko.observable("");
+
+			this.$t.modal({
+				keyboard: true
+				, show: false
+			});
+		}
+		Node.prototype.open = function(d) {
+			this.id(d.id);
+			this.name(d.name);
+			this.ipAddress(d.address);
+			this.$t.modal("show");
+		};
+		Node.prototype.close = function() {
+			$("form")[0].reset();
+			this.$t.modal("hide");
+		};
+		return Node;
+	})();
+
+	var context = {
+		node: new Node($("#node-detail-diag"))
+	};
+
+	ko.applyBindings(context);
+
+	window.models = context;
+});
+
+$(function(){
+
+	var models = window.models;
+	var force = d3.layout.force();
+	var topology = d3.topology({
+		force: function() { return force; }
+	});
 	d3.json("network.json", function(err, data) {
 		d3.select("svg#stage")
 			.datum(data)
-			.call(topology);
+			.call(topology)
+			// Customize behavior
+			.call(topology.nodes(function(nodes) {
+				$("#close").on("click", function() {
+					models.node.close();
+				});
+				nodes.on("click", function(d) {
+					models.node.open(d);
+				});
+			}));
 	});
 });
 </script>

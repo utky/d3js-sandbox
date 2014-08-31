@@ -87,6 +87,9 @@
 		});
 	}
 
+	/**
+	 * Data manipulation utilities
+	 */
 	function flattenGroups(data, config) {
 		// flatten hierarchical group object to plain array.
 		// by recursive reducing
@@ -110,15 +113,6 @@
 			c.parent = p;
 			return c;
 		});
-	}
-
-	function markAsNode(n) {
-		n.__is_node__ = true;
-		return n;
-	}
-
-	function isNode(n) {
-		return n.__is_node__;
 	}
 
 	function indexOf(key, array, config, type) {
@@ -155,8 +149,11 @@
 		});
 	}
 
+	/*
+	 * Data traversal
+	 */
 	function processGroup(selection, config, data) {
-		var groups = selection.selectAll(config.group.selector())
+		var groups = __selectAll(selection, config, "group")
 			.data(data, config.group.key);
 		groups.enter().append("g")
 			.call(config.group.render);
@@ -164,7 +161,7 @@
 	}
 
 	function processNode(selection, config) {
-		var nodes = selection.selectAll(config.node.selector())
+		var nodes = __selectAll(selection, config, "node")
 			.data(config.group.nodes, config.node.key);
 		nodes.enter().append("g")
 			.call(config.node.render);
@@ -172,7 +169,7 @@
 	}
 
 	function processPort(selection, config) {
-		var ports = selection.selectAll(config.port.selector())
+		var ports = __selectAll(selection, config, "port")
 			.data(config.node.ports, config.port.key);
 		ports.enter().append("g")
 			.call(config.port.render);
@@ -180,63 +177,100 @@
 	}
 
 	function processLink(selection, config, data) {
-		var links = selection.selectAll(config.link.selector())
+		var links = __selectAll(selection, config, "link")
 			.data(data);
 		links.enter().append("g")
 			.call(config.link.render);
 		return links;
 	}
 
+	/*
+	 * Misc
+	 */
+	function __selectAll(base, config, type) {
+		return base.selectAll(config[type].selector());
+	}
+
 	function fireTick(type, base, config) {
-		var selection = base.selectAll(config[type].selector());
+		var selection = __selectAll(base, config, type);
 		return config[type].tick(selection);
 	}
+
+	function clone() {
+		var target = {};
+
+		var argLength = arguments.length;
+		for(var i = 0; i < argLength; i++) {
+			var source = arguments[i];
+			if (!source) {
+				continue;
+			}
+			var keys = Object.keys(source);
+
+			target = keys.filter(function(k) {
+				return source.hasOwnProperty(k) && source[k];
+			}).reduce(function(t, k) {
+				var value = source[k];
+				if (typeof value === 'object') {
+					value = clone(value);
+				}
+				t[k] = value;
+				return t;
+			}, target);
+		}
+		return target
+	}
+
+	/*
+	 * Default configuration
+	 */
+	var defaultConfig = {
+		width: function() { return 1200 }
+		, height: function() { return 700 }
+		, force: function() {return d3.layout.force();}
+		, group: {
+			selector: function() { return ".group"; }
+			, key : function(d) { return d.id }
+			, children : function(d) { return d.children || []}
+			, nodes : function(d) { return d.nodes || []}
+			, render: renderGroup
+			, tick: tickGroup
+		}
+		, node: {
+			selector: function() { return ".node"; }
+			, key : function(d) { return d.id }
+			, ports : function(d) { return d.ports || []}
+			, render: renderNode
+			, tick: tickNode
+			, fixed: function() { return true; }
+		}
+		, port: {
+			selector: function() { return ".port"; }
+			, key : function(d) { return d.id }
+			, render: renderPort
+			, tick: tickPort
+		}
+		, link: {
+			selector: function() { return ".link"; }
+			, portKey: function(d) { return d; }
+			, render: renderLink
+			, tick: tickLink
+		}
+	};
+	var fireOrder = ["group", "node", "port", "link"];
 
 	/**
 	 * Entry point of this plugin
 	 */
 	function create(options) {
 
-		// Default configuration object
-		var cfg = {
-			width: function() { return 1200 }
-			, height: function() { return 700 }
-			, force: function() {return d3.layout.force();}
-			, group: {
-				selector: function() { return ".group"; }
-				, key : function(d) { return d.id }
-				, children : function(d) { return d.children || []}
-				, nodes : function(d) { return d.nodes || []}
-				, render: renderGroup
-				, tick: tickGroup
-			}
-			, node: {
-				selector: function() { return ".node"; }
-				, key : function(d) { return d.id }
-				, ports : function(d) { return d.ports || []}
-				, render: renderNode
-				, tick: tickNode
-				, fixed: function() { return true; }
-			}
-			, port: {
-				selector: function() { return ".port"; }
-				, key : function(d) { return d.id }
-				, render: renderPort
-				, tick: tickPort
-			}
-			, link: {
-				selector: function() { return ".link"; }
-				, portKey: function(d) { return d; }
-				, render: renderLink
-				, tick: tickLink
-			}
-		};
+		// override default configuration object
+		var cfg = clone(defaultConfig, options);
 
 		// selection processing
 		function topology(selection) {
 			selection.each(function(d, i) {
 
-				var fireOrder = ["group", "node", "port", "link"];
 				var force = cfg.force();
 
 				// Build data to apply layout function (exclude root of group hierarchy)
@@ -267,7 +301,6 @@
 					return n;
 				});
 				var portsArray = nodesArray.reduce(function(acc, n) {
-					markAsNode(n);
 					var ports = (n.ports || []);
 					return acc.concat(setParent(n, ports));
 				}, new Array());
@@ -275,22 +308,18 @@
 				var portLinks = indexedLink(d.links, portsArray, cfg).map(function(l) {
 					l.source = l.source + nl;
 					l.target = l.target + nl;
-					console.log("indexed Link");
-					console.log(l);
 					return l;
 				});
 				var busLinks = internalBus(nodesArray, portsArray, cfg).map(function(l) {
 					l.target = l.target + nl;
-					console.log("ibus Link");
-					console.log(l);
 					return l;
 				});
 
 				var forceNodes = nodesArray.concat(portsArray);
 				var forceLinks = portLinks.concat(busLinks);
 
-				target.selectAll(cfg.node.selector()).call(force.drag);
-				target.selectAll(cfg.port.selector()).call(force.drag);
+				__selectAll(target, cfg, "node").call(force.drag);
+				__selectAll(target, cfg, "port").call(force.drag);
 				force.gravity(0)
     				//.size([cfg.width(), cfg.height()])
 					.linkDistance(10)
@@ -308,6 +337,31 @@
 				force.start();
 			});
 		}
+
+		/*
+		 * Helper method for selection
+		 */
+		var generateSelector = function(type) {
+			return function(callback) {
+				return function(selection) {
+					if (callback) __selectAll(selection, cfg, type).call(callback);
+				};
+			};
+		};
+		/*
+		 * selector shortcut.
+		 * each helper function needs callback
+		 *   which receive selection array determined by the plug-in specific selector
+		 *
+		 * usage:
+		 * 	d3.select("svg").call(topology.nodes(function(nodes) {
+		 * 		nodes.on("click", function(d) { alert(d); });
+		 * 	}));
+		 */
+		topology.groups = generateSelector("group");
+		topology.nodes = generateSelector("node");
+		topology.ports = generateSelector("port");
+		topology.links = generateSelector("link");
 
 		topology.route = function(selection) {
 			selection.each(function(d, i) {

@@ -15,10 +15,10 @@
 
 .group path {
   fill: #ccf;
-  fill-opacity: 0.4;
+  fill-opacity: 1;
   stroke: #ccf;
-  stroke-width: 70;
-  stroke-opacity: 0.4;
+  stroke-width: 50;
+  stroke-opacity: 1;
   stroke-linecap: "round";
   stroke-linejoin: "round";
 }
